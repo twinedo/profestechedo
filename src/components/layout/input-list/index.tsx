@@ -1,12 +1,13 @@
 import {StyleSheet, Text, TextStyle, View} from 'react-native';
 import React, {useState} from 'react';
-import {Input} from 'components/basic';
+import {Input, Spacer} from 'components/basic';
 import {Formik} from 'formik';
 import {KeyboardType} from 'react-native';
 import globalStyles from 'styles/globalStyles';
 import {ViewStyle} from 'react-native';
 import {IInputProps} from 'components/basic/input';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import Foundation from 'react-native-vector-icons/Foundation';
+import {WHITE} from 'styles/colors';
 
 export type IFormField<T = Record<string, any>> = {
   [key: string]: keyof T;
@@ -39,7 +40,7 @@ export type TInputListProps<T = Record<string, any>> = {
   inputProps?: IInputProps;
   submitComponent: (handleSubmit: () => void) => React.ReactNode;
   validationSchema?: any;
-  onSubmit: (values: IFormField<T>) => void;
+  onSubmit: (values: IFormFieldValues<T>) => void;
 };
 
 export default function InputList<T>(props: TInputListProps<IFormField<T>>) {
@@ -82,6 +83,7 @@ export default function InputList<T>(props: TInputListProps<IFormField<T>>) {
                 <Text style={[globalStyles.headingBlack.h3, {...titleStyle}]}>
                   {o.title}
                 </Text>
+                <Spacer height={10} />
                 <Input
                   placeholder={o.placeholder}
                   onChangeText={handleChange(o.name)}
@@ -102,8 +104,11 @@ export default function InputList<T>(props: TInputListProps<IFormField<T>>) {
                       globalStyles.alignCenter,
                       globalStyles.columnGap,
                     ]}>
-                    <Ionicons name="information" color="red" size={24} />
-                    <Text>{errors[o.name]!.toString()}</Text>
+                    <Foundation name="info" color="red" size={24} />
+                    <Text
+                      style={[globalStyles.headingRegular.h3, {color: WHITE}]}>
+                      {errors[o.name]!.toString()}
+                    </Text>
                   </View>
                 ) : null}
               </View>

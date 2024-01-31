@@ -3,9 +3,9 @@ import {
   View,
   TextInput,
   StyleSheet,
-  TextStyle,
   ViewStyle,
   TextInputProps,
+  TextStyle,
 } from 'react-native';
 import {GREY8} from 'styles/colors';
 import globalStyles from 'styles/globalStyles';
@@ -35,14 +35,15 @@ const Input: React.FC<IInputProps> = ({
         globalStyles.row,
         globalStyles.alignCenter,
         styles.container,
-        containerStyle,
+        {...containerStyle},
       ]}>
-      {prefix && <View style={[styles.prefix, prefixStyle]}>{prefix}</View>}
-      <TextInput
-        {...textInputProps}
-        style={[globalStyles.displayFlex, styles.input, style]}
-      />
-      {postfix && <View style={[styles.postfix, postfixStyle]}>{postfix}</View>}
+      {prefix && (
+        <View style={[styles.prefix, {...prefixStyle}]}>{prefix}</View>
+      )}
+      <TextInput {...textInputProps} style={[styles.input, {...style}]} />
+      {postfix && (
+        <View style={[styles.postfix, {...postfixStyle}]}>{postfix}</View>
+      )}
     </View>
   );
 };
@@ -56,12 +57,15 @@ const styles = StyleSheet.create({
   },
   prefix: {
     padding: 8,
+    flex: 0.5,
   },
   input: {
+    flex: 3,
     padding: 8,
   },
   postfix: {
     padding: 8,
+    flex: 0.5,
   },
 });
 
