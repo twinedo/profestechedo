@@ -33,6 +33,12 @@ export default function Home() {
   const {data} = useGetOrderList() as ResponseOrder;
   const [newData, setNewData] = useState<TResponseOrderList[]>(data ?? []);
 
+  useEffect(() => {
+    if (data) {
+      setNewData(newData);
+    }
+  }, [data]);
+
   const _onSearchText = (text: string) => {
     const dat = [...data];
     const filter = dat.filter(
@@ -94,7 +100,7 @@ export default function Home() {
             ]}>
             <Text style={[globalStyles.headingBold.h1]}>Order List</Text>
             <Text style={[globalStyles.headingMedium.h3]}>
-              Total Items: {newData.length}
+              Total Items: {newData?.length}
             </Text>
           </View>
           <Spacer height={20} />

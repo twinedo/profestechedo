@@ -43,7 +43,7 @@ export default function SalesInfo() {
   const {deleteItem, isSuccess: isDeleteSuccess} = useDeleteItem();
   const {updateItem, isSuccess: isUpdateSuccess} = useUpdateItem();
 
-  const [newData, setNewData] = useState<TBodyOrderItems[]>(data || []);
+  const [newData, setNewData] = useState<TBodyOrderItems[]>(data ?? []);
 
   const [newItem, setNewItem] = useState<TBodyOrderItems>({
     ItemId: 0,
@@ -60,14 +60,6 @@ export default function SalesInfo() {
     Quantity: 0,
     Price: 0,
   });
-
-  console.log('datadawsd', JSON.stringify(newData));
-
-  const itemTotals =
-    newData && newData?.map(item => item.Quantity * item.Price);
-
-  const totalAmount =
-    itemTotals && itemTotals.reduce((sum, itemTotal) => sum + itemTotal, 0);
 
   const _onCreateItem = () => {
     const item: TBodyOrderItems = {
@@ -88,9 +80,20 @@ export default function SalesInfo() {
     deleteItem(selectedItem);
   };
 
+  console.log('dataa cuk', data);
+
   useEffect(() => {
-    if (data) {
+    if (data === '') {
+      setNewData([]);
+    } else if (data !== undefined) {
       setNewData(data);
+      const itemTotals =
+        data?.data && data?.data?.map(item => item.Quantity * item.Price);
+
+      const total =
+        itemTotals?.length > 0 &&
+        itemTotals?.reduce((sum, itemTotal) => sum + itemTotal, 0);
+      setTotalAmount(total);
     }
   }, [data]);
 
@@ -118,6 +121,8 @@ export default function SalesInfo() {
       setIsModalDelete(false);
     }
   }, [isDeleteSuccess]);
+
+  const [totalAmount, setTotalAmount] = useState(0);
 
   return (
     <View style={[globalStyles.displayFlex, {backgroundColor: PRIMARY}]}>
@@ -526,7 +531,7 @@ export default function SalesInfo() {
                 Total Product:
               </Text>
               <Text style={[globalStyles.bodyMedium.body1]}>
-                {newData.length === 0 ? '0' : newData.length} Product
+                {newData?.length === 0 ? '0' : newData?.length} Product
               </Text>
             </View>
             <Spacer height={10} />
