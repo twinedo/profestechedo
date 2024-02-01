@@ -7,7 +7,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {Spacer, Input, Button} from 'components/basic';
 import SalesOrder from 'components/layout/sales-order';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -19,10 +19,106 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import {Counter} from 'components/layout';
 import {percentageHeight} from 'utils/screenSize';
 import Modal from 'react-native-modal';
+import {
+  TBodyOrderItems,
+  useCreateItem,
+  useDeleteItem,
+  useGetItemList,
+  useUpdateItem,
+} from 'services/api';
+import {UseQueryResult} from '@tanstack/react-query';
+
+type ResponseItems = {
+  data: TBodyOrderItems[];
+} & UseQueryResult;
 
 export default function SalesInfo() {
   const [isModalAdd, setIsModalAdd] = useState(false);
+  const [isModalUpdate, setIsModalUpdate] = useState(false);
   const [isModalDelete, setIsModalDelete] = useState(false);
+
+  const {data, refetch} = useGetItemList() as ResponseItems;
+
+  const {createItem, isSuccess: isCreateSuccess} = useCreateItem();
+  const {deleteItem, isSuccess: isDeleteSuccess} = useDeleteItem();
+  const {updateItem, isSuccess: isUpdateSuccess} = useUpdateItem();
+
+  const [newData, setNewData] = useState<TBodyOrderItems[]>(data || []);
+
+  const [newItem, setNewItem] = useState<TBodyOrderItems>({
+    ItemId: 0,
+    ItemName: '',
+    OrderId: 0,
+    Quantity: 0,
+    Price: 0,
+  });
+
+  const [selectedItem, setSelectedItem] = useState<TBodyOrderItems>({
+    ItemId: 0,
+    ItemName: '',
+    OrderId: 0,
+    Quantity: 0,
+    Price: 0,
+  });
+
+  console.log('datadawsd', JSON.stringify(newData));
+
+  const itemTotals =
+    newData && newData?.map(item => item.Quantity * item.Price);
+
+  const totalAmount =
+    itemTotals && itemTotals.reduce((sum, itemTotal) => sum + itemTotal, 0);
+
+  const _onCreateItem = () => {
+    const item: TBodyOrderItems = {
+      ItemId: Math.round(Math.random()),
+      OrderId: Math.round(Math.random()),
+      ItemName: newItem.ItemName,
+      Quantity: newItem.Quantity,
+      Price: newItem.Price,
+    };
+    createItem(item);
+  };
+
+  const _onUpdateItem = () => {
+    updateItem(selectedItem);
+  };
+
+  const _onDeleteItem = () => {
+    deleteItem(selectedItem);
+  };
+
+  useEffect(() => {
+    if (data) {
+      setNewData(data);
+    }
+  }, [data]);
+
+  useEffect(() => {
+    if (isCreateSuccess) {
+      refetch();
+      setNewItem({} as TBodyOrderItems);
+      setIsModalAdd(false);
+    }
+  }, [isCreateSuccess]);
+
+  useEffect(() => {
+    if (isUpdateSuccess) {
+      refetch();
+      setNewItem({} as TBodyOrderItems);
+      setIsModalUpdate(false);
+    }
+  }, [isUpdateSuccess]);
+
+  useEffect(() => {
+    if (isDeleteSuccess) {
+      refetch();
+      setNewItem({} as TBodyOrderItems);
+      setSelectedItem({} as TBodyOrderItems);
+      setIsModalDelete(false);
+    }
+  }, [isDeleteSuccess]);
+
   return (
     <View style={[globalStyles.displayFlex, {backgroundColor: PRIMARY}]}>
       <StatusBar backgroundColor={PRIMARY} barStyle="light-content" />
@@ -87,8 +183,8 @@ export default function SalesInfo() {
             </View>
             <View style={[]}>
               <FlatList
-                data={Array(10).fill('')}
-                keyExtractor={(_, i) => i.toString()}
+                data={newData}
+                keyExtractor={item => item.ItemId.toString()}
                 ItemSeparatorComponent={() => <Spacer height={22} />}
                 style={{height: percentageHeight(30)}}
                 contentContainerStyle={[{padding: 10}]}
@@ -108,15 +204,18 @@ export default function SalesInfo() {
                     ]}>
                     <View style={[globalStyles.justifySpaceBetween]}>
                       <Text style={[globalStyles.headingBold.h2]}>
-                        BARANG 1
+                        {item.ItemName}
                       </Text>
                       <Text style={[globalStyles.headingBold.h2]}>
-                        2.000.000
+                        {item.Price}
                       </Text>
                     </View>
                     <View style={[globalStyles.alignCenter]}>
                       <Text style={[globalStyles.headingMedium.h3]}>QTY</Text>
-                      <Counter onChangeValue={val => console.log('val', val)} />
+                      <Counter
+                        defaultValue={item.Quantity}
+                        onChangeValue={val => console.log('val', val)}
+                      />
                     </View>
                     <View
                       style={[
@@ -125,7 +224,7 @@ export default function SalesInfo() {
                       ]}>
                       <Text style={[globalStyles.headingMedium.h3]}>Total</Text>
                       <Text style={[globalStyles.headingMedium.h3]}>
-                        4.000.000
+                        {item.Quantity * item.Price}
                       </Text>
                     </View>
                     <View
@@ -134,8 +233,24 @@ export default function SalesInfo() {
                         globalStyles.alignCenter,
                         globalStyles.columnGap,
                       ]}>
-                      <Octicons name="pencil" size={24} color={BLACK} />
-                      <Feather name="trash-2" size={24} color={BLACK} />
+                      <Octicons
+                        name="pencil"
+                        size={24}
+                        color={BLACK}
+                        onPress={() => {
+                          setIsModalUpdate(true);
+                          setSelectedItem(item);
+                        }}
+                      />
+                      <Feather
+                        name="trash-2"
+                        size={24}
+                        color={BLACK}
+                        onPress={() => {
+                          setIsModalDelete(true);
+                          setSelectedItem(item);
+                        }}
+                      />
                     </View>
                   </Pressable>
                 )}
@@ -161,16 +276,36 @@ export default function SalesInfo() {
                 <Spacer height={20} />
                 <Text style={[globalStyles.headingBold.h3]}>Item Name</Text>
                 <Spacer height={10} />
-                <Input placeholder="Barang 1" />
+                <Input
+                  placeholder="Barang 1"
+                  value={newItem.ItemName}
+                  onChangeText={(value: string) =>
+                    setNewItem({...newItem, ItemName: value})
+                  }
+                />
                 <Spacer height={30} />
                 <Text style={[globalStyles.headingBold.h3]}>Price</Text>
                 <Spacer height={10} />
-                <Input placeholder="Barang 1" />
+                <Input
+                  placeholder="1000"
+                  value={newItem?.Price?.toString()}
+                  onChangeText={(value: string) =>
+                    setNewItem({...newItem, Price: parseInt(value)})
+                  }
+                />
                 <Spacer height={30} />
                 <View style={[globalStyles.row, globalStyles.alignCenter]}>
                   <Text style={[globalStyles.headingBold.h3]}>QTY</Text>
                   <Spacer width={30} />
-                  <Counter onChangeValue={val => console.log('val', val)} />
+                  <Counter
+                    defaultValue={newItem.Quantity}
+                    onChangeValue={val =>
+                      setNewItem({
+                        ...newItem,
+                        Quantity: val,
+                      })
+                    }
+                  />
                 </View>
                 <Spacer height={20} />
                 <View
@@ -180,7 +315,9 @@ export default function SalesInfo() {
                     globalStyles.justifySpaceBetween,
                   ]}>
                   <Text style={[globalStyles.headingBold.h2]}>Total: </Text>
-                  <Text style={[globalStyles.headingBold.h2]}>2.000.000</Text>
+                  <Text style={[globalStyles.headingBold.h2]}>
+                    {newItem.Price * newItem.Quantity}
+                  </Text>
                 </View>
                 <Spacer height={10} />
                 <View
@@ -190,6 +327,98 @@ export default function SalesInfo() {
                     globalStyles.justifyEven,
                   ]}>
                   <Button
+                    onPress={_onCreateItem}
+                    containerStyle={{height: 28, width: 125}}
+                    textStyle={{fontSize: 13}}>
+                    Save
+                  </Button>
+                  <Button
+                    onPress={() => setIsModalAdd(false)}
+                    containerStyle={{
+                      backgroundColor: 'transparent',
+                      height: 28,
+                      width: 125,
+                      borderWidth: 1,
+                    }}
+                    textColor={BLACK}
+                    textStyle={{fontSize: 13}}>
+                    Cancel
+                  </Button>
+                </View>
+              </View>
+            </View>
+          </Modal>
+          <Modal isVisible={isModalUpdate}>
+            <View
+              style={[globalStyles.displayFlex, globalStyles.justifyCenter]}>
+              <View
+                style={[
+                  globalStyles.horizontalDefaultPadding,
+                  globalStyles.verticalDefaultPadding,
+                  {backgroundColor: WHITE, borderRadius: 10},
+                ]}>
+                <Text
+                  style={[
+                    globalStyles.textAlignCenter,
+                    globalStyles.headingBold.h3,
+                  ]}>
+                  Update Item
+                </Text>
+                <Spacer height={20} />
+                <Text style={[globalStyles.headingBold.h3]}>Item Name</Text>
+                <Spacer height={10} />
+                <Input
+                  placeholder="Barang 1"
+                  value={selectedItem.ItemName}
+                  onChangeText={(value: string) =>
+                    setSelectedItem({...selectedItem, ItemName: value})
+                  }
+                />
+                <Spacer height={30} />
+                <Text style={[globalStyles.headingBold.h3]}>Price</Text>
+                <Spacer height={10} />
+                <Input
+                  placeholder="1000"
+                  value={selectedItem?.Price?.toString()}
+                  onChangeText={(value: string) =>
+                    setSelectedItem({...selectedItem, Price: parseInt(value)})
+                  }
+                />
+                <Spacer height={30} />
+                <View style={[globalStyles.row, globalStyles.alignCenter]}>
+                  <Text style={[globalStyles.headingBold.h3]}>QTY</Text>
+                  <Spacer width={30} />
+                  <Counter
+                    defaultValue={newItem.Quantity}
+                    onChangeValue={val =>
+                      setSelectedItem({
+                        ...selectedItem,
+                        Quantity: val,
+                      })
+                    }
+                  />
+                </View>
+                <Spacer height={20} />
+                <View
+                  style={[
+                    globalStyles.row,
+                    globalStyles.alignCenter,
+                    globalStyles.justifySpaceBetween,
+                  ]}>
+                  <Text style={[globalStyles.headingBold.h2]}>Total: </Text>
+                  <Text style={[globalStyles.headingBold.h2]}>
+                    {selectedItem.Price * selectedItem.Quantity}
+                  </Text>
+                </View>
+                <Spacer height={10} />
+                <View
+                  style={[
+                    globalStyles.row,
+                    globalStyles.alignCenter,
+                    globalStyles.justifyEven,
+                  ]}>
+                  <Button
+                    onPress={_onUpdateItem}
                     containerStyle={{height: 28, width: 125}}
                     textStyle={{fontSize: 13}}>
                     Save
@@ -245,6 +474,7 @@ export default function SalesInfo() {
                     globalStyles.w100,
                   ]}>
                   <Button
+                    onPress={_onDeleteItem}
                     containerStyle={{height: 28, width: 125}}
                     textStyle={{fontSize: 13}}>
                     Yes
@@ -283,8 +513,8 @@ export default function SalesInfo() {
                 globalStyles.alignCenter,
                 globalStyles.justifySpaceBetween,
               ]}>
-              <Text>Sub Total:</Text>
-              <Text>12.000.000</Text>
+              <Text style={[globalStyles.bodyMedium.body1]}>Sub Total:</Text>
+              <Text style={[globalStyles.bodyMedium.body1]}>{totalAmount}</Text>
             </View>
             <View
               style={[
@@ -292,8 +522,12 @@ export default function SalesInfo() {
                 globalStyles.alignCenter,
                 globalStyles.justifySpaceBetween,
               ]}>
-              <Text>Total Product:</Text>
-              <Text>6 Product</Text>
+              <Text style={[globalStyles.bodyMedium.body1]}>
+                Total Product:
+              </Text>
+              <Text style={[globalStyles.bodyMedium.body1]}>
+                {newData.length === 0 ? '0' : newData.length} Product
+              </Text>
             </View>
             <Spacer height={10} />
             <View

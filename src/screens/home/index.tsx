@@ -31,7 +31,7 @@ export default function Home() {
   const navigation = useNavigation<StackNavigationProp<NavParam, 'Home'>>();
 
   const {data} = useGetOrderList() as ResponseOrder;
-  const [newData, setNewData] = useState<TResponseOrderList[]>(data);
+  const [newData, setNewData] = useState<TResponseOrderList[]>(data ?? []);
 
   const _onSearchText = (text: string) => {
     const dat = [...data];
@@ -94,7 +94,7 @@ export default function Home() {
             ]}>
             <Text style={[globalStyles.headingBold.h1]}>Order List</Text>
             <Text style={[globalStyles.headingMedium.h3]}>
-              Total Items: {data.length}
+              Total Items: {newData.length}
             </Text>
           </View>
           <Spacer height={20} />

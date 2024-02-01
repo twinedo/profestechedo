@@ -5,6 +5,7 @@ import {Alert} from 'react-native';
 import {_useAxios} from 'services/useAxios';
 import {setAuth} from 'stores/authSlice';
 import {useAppDispatch} from 'stores/hooks';
+import uuid from 'react-native-uuid';
 
 export type TResponseOrderList = {
   OrderId: number;
@@ -14,6 +15,14 @@ export type TResponseOrderList = {
   Address: string;
   ItemList: any[];
   CustomerName: string;
+};
+
+export type TBodyOrderItems = {
+  ItemId: number;
+  OrderId: number;
+  ItemName: string;
+  Quantity: number;
+  Price: number;
 };
 
 export const useGenerateToken = () => {
@@ -45,6 +54,7 @@ export const useGenerateToken = () => {
     onSuccess: async data => {
       console.log('dataaa', data);
       await AsyncStorage.setItem('@profestechedo', data.access_token);
+      await AsyncStorage.setItem('@profestechedo_uuid', uuid.v4().toString());
       dispatch(setAuth(data));
       return data;
     },
@@ -74,4 +84,116 @@ export const useGetOrderList = () => {
     refetchOnReconnect: true,
   });
   return {...rest};
+};
+
+export const useGetItemList = () => {
+  const {...rest} = useQuery({
+    queryKey: ['useGetItemList'],
+    queryFn: async () => {
+      var myHeaders = new Headers();
+
+      myHeaders.append('Content-Type', 'application/json');
+      try {
+        const response = await _useAxios({
+          url: '/Order/GetItems',
+          method: 'get',
+          headers: myHeaders,
+        });
+        return response?.data as TBodyOrderItems[];
+      } catch (error) {
+        return error;
+      }
+    },
+    refetchOnMount: true,
+    refetchOnReconnect: true,
+  });
+  return {...rest};
+};
+
+export const useCreateItem = () => {
+  const {mutate, ...rest} = useMutation({
+    mutationKey: ['useCreateItem'],
+    mutationFn: async (data: TBodyOrderItems) => {
+      console.log('datanhya', data);
+      var myHeaders = new Headers();
+
+      myHeaders.append('Content-Type', 'application/json');
+      try {
+        const response = await _useAxios({
+          url: '/Order/CreateItem',
+          method: 'post',
+          data,
+          headers: myHeaders,
+        });
+        return response?.data;
+      } catch (error) {
+        return error;
+      }
+    },
+    onSuccess: data => {
+      return data;
+    },
+    onError: error => {
+      return error;
+    },
+  });
+  return {createItem: mutate, ...rest};
+};
+
+export const useUpdateItem = () => {
+  const {mutate, ...rest} = useMutation({
+    mutationKey: ['useUpdateItem'],
+    mutationFn: async (data: TBodyOrderItems) => {
+      var myHeaders = new Headers();
+
+      myHeaders.append('Content-Type', 'application/json');
+      try {
+        const response = await _useAxios({
+          url: '/Order/UpdateItem',
+          method: 'post',
+          data,
+          headers: myHeaders,
+        });
+        return response?.data;
+      } catch (error) {
+        return error;
+      }
+    },
+    onSuccess: data => {
+      return data;
+    },
+    onError: error => {
+      return error;
+    },
+  });
+  return {updateItem: mutate, ...rest};
+};
+
+export const useDeleteItem = () => {
+  const {mutate, ...rest} = useMutation({
+    mutationKey: ['useDeleteItem'],
+    mutationFn: async (data: TBodyOrderItems) => {
+      var myHeaders = new Headers();
+
+      myHeaders.append('Content-Type', 'application/json');
+      try {
+        const response = await _useAxios({
+          url: '/Order/DeleteItem',
+          method: 'post',
+          data,
+          headers: myHeaders,
+        });
+        return response?.data;
+      } catch (error) {
+        return error;
+      }
+    },
+    onSuccess: data => {
+      return data;
+    },
+    onError: error => {
+      return error;
+    },
+  });
+  return {deleteItem: mutate, ...rest};
 };

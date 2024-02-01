@@ -6,11 +6,12 @@ import {GREY3, PRIMARY, WHITE} from 'styles/colors';
 
 interface ICounterPrimary {
   onChangeValue: (val: number) => void;
+  defaultValue: number;
 }
 
 export const Counter = React.memo((props: ICounterPrimary) => {
-  const {onChangeValue} = props;
-  const [count, setCount] = useState(0);
+  const {onChangeValue, defaultValue = 0} = props;
+  const [count, setCount] = useState(defaultValue);
 
   const _onMinusPress = () => {
     if (count > 0) {

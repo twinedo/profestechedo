@@ -24,7 +24,10 @@ instance.interceptors.request.use(
     try {
       // const token = await zustandStorage.getItem('@cfmcrm_access_token');
       const token = await AsyncStorage.getItem('@profestechedo');
+      const uuid = await AsyncStorage.getItem('@profestechedo_uuid');
       config.headers.Authorization = `Bearer ${token}`;
+      config.headers['state'] = `${uuid}`;
+
       // }
     } catch (error) {
       console.error('Error in token refresh:', error);
