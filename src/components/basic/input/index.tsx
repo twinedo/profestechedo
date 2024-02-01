@@ -58,6 +58,7 @@ const styles = StyleSheet.create({
   prefix: {
     padding: 8,
     flex: 0.5,
+    alignItems: 'flex-start',
   },
   input: {
     flex: 3,
@@ -66,6 +67,7 @@ const styles = StyleSheet.create({
   postfix: {
     padding: 8,
     flex: 0.5,
+    alignItems: 'flex-end',
   },
 });
 

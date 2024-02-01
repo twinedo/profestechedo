@@ -15,7 +15,7 @@ export type IFormField<T = Record<string, any>> = {
 
 export type IFormType<T = Record<string, any>> = {
   id: number;
-  title: string;
+  title?: string;
   placeholder: string;
   name: keyof IFormField<T>;
   type: KeyboardType;
@@ -80,9 +80,11 @@ export default function InputList<T>(props: TInputListProps<IFormField<T>>) {
                   globalStyles.relative,
                   {...containerStyle},
                 ]}>
-                <Text style={[globalStyles.headingBlack.h3, {...titleStyle}]}>
-                  {o.title}
-                </Text>
+                {typeof o.title === 'string' && (
+                  <Text style={[globalStyles.headingBlack.h3, {...titleStyle}]}>
+                    {o.title}
+                  </Text>
+                )}
                 <Spacer height={10} />
                 <Input
                   placeholder={o.placeholder}
