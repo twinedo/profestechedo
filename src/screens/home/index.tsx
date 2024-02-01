@@ -6,7 +6,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {BaseContainer} from 'components/layout';
 import SalesOrder from 'components/layout/sales-order';
 import globalStyles from 'styles/globalStyles';
@@ -19,9 +19,36 @@ import {useNavigation} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {NavParam} from 'navigations/types';
 import {percentageHeight} from 'utils/screenSize';
+import {TResponseOrderList, useGetOrderList} from 'services/api';
+import {UseQueryResult} from '@tanstack/react-query';
+import moment from 'moment';
+
+type ResponseOrder = {
+  data: TResponseOrderList[];
+} & UseQueryResult;
 
 export default function Home() {
   const navigation = useNavigation<StackNavigationProp<NavParam, 'Home'>>();
+
+  const {data} = useGetOrderList() as ResponseOrder;
+  const [newData, setNewData] = useState<TResponseOrderList[]>(data);
+
+  const _onSearchText = (text: string) => {
+    const dat = [...data];
+    const filter = dat.filter(
+      o =>
+        o.CustomerName.toLowerCase().includes(text) ||
+        o.Address.toLowerCase().includes(text) ||
+        o.OrderDate.toLowerCase().includes(text),
+    );
+    console.log('filterrr', filter);
+    if (filter.length === 0) {
+      setNewData(data);
+    } else {
+      setNewData(filter);
+    }
+  };
+
   return (
     <View style={[globalStyles.displayFlex, {backgroundColor: PRIMARY}]}>
       <StatusBar
@@ -42,6 +69,7 @@ export default function Home() {
             <Input
               placeholder="Keyword"
               containerStyle={{borderColor: '#979C9F'}}
+              onChangeText={(text: string) => _onSearchText(text)}
             />
             <Spacer height={10} />
             <Input
@@ -54,6 +82,7 @@ export default function Home() {
                   color="#979C9F"
                 />
               }
+              onChangeText={(text: string) => _onSearchText(text)}
             />
           </View>
           <Spacer height={30} />
@@ -64,7 +93,9 @@ export default function Home() {
               globalStyles.alignCenter,
             ]}>
             <Text style={[globalStyles.headingBold.h1]}>Order List</Text>
-            <Text style={[globalStyles.headingMedium.h3]}>Total Items: 0</Text>
+            <Text style={[globalStyles.headingMedium.h3]}>
+              Total Items: {data.length}
+            </Text>
           </View>
           <Spacer height={20} />
           <Button
@@ -77,8 +108,8 @@ export default function Home() {
           <Spacer height={20} />
           <View>
             <FlatList
-              data={Array(10).fill('')}
-              keyExtractor={(_, i) => i.toString()}
+              data={newData}
+              keyExtractor={item => item.OrderDate}
               ItemSeparatorComponent={() => <Spacer height={22} />}
               style={{height: percentageHeight(40)}}
               contentContainerStyle={[{padding: 10}]}
@@ -92,15 +123,18 @@ export default function Home() {
                     globalStyles.justifyEven,
                     {borderRadius: 15, backgroundColor: WHITE, elevation: 15},
                   ]}>
-                  <Text style={[globalStyles.headingBold.h2]}>PROFES</Text>
-                  <Text style={[globalStyles.headingMedium.h3]}>50_01</Text>
-                  <Text style={[globalStyles.headingMedium.h3]}>24/2/2011</Text>
+                  <Text style={[globalStyles.headingBold.h2]}>
+                    {item.CustomerName}
+                  </Text>
+                  <Text style={[globalStyles.headingMedium.h3]}>
+                    {item.Address === '' ? 'null' : item.Address}
+                  </Text>
+                  <Text style={[globalStyles.headingMedium.h3]}>
+                    {moment(item.OrderDate).format('DD/M/YYYY')}
+                  </Text>
                 </Pressable>
               )}
             />
-          </View>
-          <View>
-            <Text>Test</Text>
           </View>
         </SalesOrder>
       </SafeAreaView>

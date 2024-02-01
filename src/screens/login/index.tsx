@@ -1,10 +1,6 @@
 import {StatusBar, StyleSheet, Text, View} from 'react-native';
 import React, {useState} from 'react';
-import InputList, {
-  IFormField,
-  IFormFieldValues,
-  IFormType,
-} from 'components/layout/input-list';
+import InputList, {IFormType} from 'components/layout/input-list';
 import {Button} from 'components/basic';
 import * as Yup from 'yup';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -13,9 +9,7 @@ import {SECONDARY, WHITE} from 'styles/colors';
 import globalStyles from 'styles/globalStyles';
 import LinearGradient from 'react-native-linear-gradient';
 import {percentageWidth} from 'utils/screenSize';
-import {useNavigation} from '@react-navigation/native';
-import {StackNavigationProp} from '@react-navigation/stack';
-import {NavParam} from 'navigations/types';
+import {useGenerateToken} from 'services/api';
 
 const LoginSchema = Yup.object().shape({
   username: Yup.string().required('Required'),
@@ -28,7 +22,6 @@ export type TLoginField = {
 };
 
 export default function Login() {
-  const navigation = useNavigation<StackNavigationProp<NavParam, 'Login'>>();
   const [formList] = useState<IFormType[]>([
     {
       id: 1,
@@ -51,9 +44,10 @@ export default function Login() {
     },
   ]);
 
-  const _onSubmit = (val: IFormFieldValues<IFormField<TLoginField>>) => {
-    console.log('val', val);
-    navigation.navigate('Home');
+  const {generateToken} = useGenerateToken();
+
+  const _onSubmit = (val: TLoginField) => {
+    generateToken({client_id: val.username, client_secret: val.password});
   };
 
   return (
@@ -89,7 +83,7 @@ export default function Login() {
           </Text>
           <InputList<TLoginField>
             form={formList}
-            initialValues={{username: '', password: ''}}
+            initialValues={{username: 'profes-api', password: 'P@ssw0rd'}}
             validationSchema={LoginSchema}
             onSubmit={value => _onSubmit(value)}
             containerInputStyle={{borderWidth: 0}}

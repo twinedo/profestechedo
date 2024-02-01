@@ -1,16 +1,11 @@
-import {
-  Image,
-  ScrollView,
-  ScrollViewProps,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import {Image, StyleSheet, Text, View} from 'react-native';
 import React, {ReactNode} from 'react';
 import {Toolbar} from 'components/basic';
 import SimpleLineIcons from 'react-native-vector-icons/SimpleLineIcons';
 import {PRIMARY, WHITE} from 'styles/colors';
 import globalStyles from 'styles/globalStyles';
+import {useAppDispatch} from 'stores/hooks';
+import {resetAuth} from 'stores/authSlice';
 
 type TSalesOrder = {
   title: string;
@@ -19,6 +14,7 @@ type TSalesOrder = {
 
 export default function SalesOrder(props: TSalesOrder) {
   const {title = 'Sales Order', children} = props;
+  const dispatch = useAppDispatch();
   return (
     <View style={[globalStyles.displayFlex, {}]}>
       <Toolbar
@@ -28,7 +24,14 @@ export default function SalesOrder(props: TSalesOrder) {
             style={styles.imgProfile}
           />
         }
-        postfix={<SimpleLineIcons name="menu" size={24} color={WHITE} />}
+        postfix={
+          <SimpleLineIcons
+            name="menu"
+            size={24}
+            color={WHITE}
+            onPress={() => dispatch(resetAuth())}
+          />
+        }
         containerStyle={{backgroundColor: PRIMARY}}
       />
       <View style={[globalStyles.displayFlex, {backgroundColor: PRIMARY}]}>

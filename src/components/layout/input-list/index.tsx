@@ -40,7 +40,7 @@ export type TInputListProps<T = Record<string, any>> = {
   inputProps?: IInputProps;
   submitComponent: (handleSubmit: () => void) => React.ReactNode;
   validationSchema?: any;
-  onSubmit: (values: IFormFieldValues<T>) => void;
+  onSubmit: (values: any) => void;
 };
 
 export default function InputList<T>(props: TInputListProps<IFormField<T>>) {
